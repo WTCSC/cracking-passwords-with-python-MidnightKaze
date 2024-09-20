@@ -1,40 +1,36 @@
 import argparse
 import hashlib
 
+def hashtfs_word(word):
+    sha256_hash = hashlib.sha256()
+    sha256_hash.update(word.encode())
+    return sha256_hash.hexdigest()
+
 def main():
     parser = argparse.ArgumentParser(description= 'Takes a word list and uses it to crack the password')
     parser.add_argument('password_file', help= 'File with the passwords to crack')
     parser.add_argument('word_file', help= 'The word list (or file) used to crack the password')
     args = parser.parse_args()
 
-    passwords = open(args.password_file, 'r') #opens the password file passed through in read mode
-    words = open(args.word_file, 'r') #opens the word list passed through in read mode
+    with open(args.password_file, 'r') as passwords, open(args.word_file, 'r') as words: 
+        user_passwords = passwords.readlines() 
+        word_list = words.readlines()
 
-    user_password = passwords.readlines() #splits the user+password combos into lines
-    word_list = words.readlines() #splits the word list into lines
+    hashed_passwords = [] 
+    usernames = [] 
 
-    password = ((user_password.split(':')[1]) for p in user_password) #splits the user+password combos at the ':' so you get just the password (index 1)
+    for combo in user_passwords:
+        username, password = combo.strip().split(':')
+        usernames.append(username)
+        hashed_passwords.append(password)
 
-    hashed_wordlist = []
+    hashed_wordlist = [hashtfs_word(word.strip()) for word in word_list]
 
-    for word in word_list:
-         hashed = hashtfs_word(word.strip())
-         hashed_wordlist.append(hashed)
-
-    passwords.close()
-    words.close()
-
-""""""
-
-def hashtfs_word(word): #hashes the words from word list
-
-    sha256_hash = hashlib.sha256()
-
-    sha256_hash.update(word.encode())
-
-    return sha256_hash.hexdigest()
-
-""""""
+    for p, hashed_password in enumerate(hashed_passwords):
+        for w, hashed_word in enumerate(hashed_wordlist):
+            if hashed_password == hashed_word:
+                print(f"{usernames[p]}:{word_list[w].strip()}")
+                break
 
 if __name__ == '__main__':
-        main()
+    main()
